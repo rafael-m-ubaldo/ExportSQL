@@ -21,7 +21,6 @@ namespace ExportSQL
     class Program
     {
         static List<TableColumnInfo> TableInformation = new List<TableColumnInfo>();
-        //static InsertScript ScriptOut;
         static StringBuilder FinalScript = new StringBuilder();
         static bool TableScripts = true;
         static string Server = string.Empty;
@@ -73,7 +72,6 @@ namespace ExportSQL
                         scripts.Add(s);
                         truncates.Add(ScriptOut.TruncateTable);
                     }
-                    //FinalScript.Append(s);
                 }
                 FinalScript.AppendFormat("USE {0}\r\n", Database);
                 FinalScript.AppendLine("GO");
@@ -180,16 +178,10 @@ namespace ExportSQL
                     Console.WriteLine("No Password.");
                     result = false;
                 }
-                //if (Tables.Count == 0)
-                //{
-                //    Console.WriteLine("No table(s) are specified.");
-                //    result = false;
-                //}
             }
             catch (Exception ex)
             {
                 Console.WriteLine(string.Format("Error reading command-line options: {0}", ex.Message));
-                //MessageBox.Show(ex.Message, "Error reading command-line options...", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 result = false;
             }
             return result;
@@ -310,40 +302,11 @@ namespace ExportSQL
             {
                 query.Append(" ORDER BY ").Append(OrderBy);
             }
-            //else
-            //{
-            //    // default to first column
-            //    query.Append(" ORDER BY ").Append(TableInformation[0].ColumnName);
-            //}
             using (SqlConnection conn = new SqlConnection(ConnectionString))
             {
                 SqlCommand cmd = new SqlCommand(query.ToString(), conn);
                 conn.Open();
                 SqlDataReader reader = cmd.ExecuteReader();
-                /***
-                TableInformation.Clear();
-                for (int idx = 0; idx < reader.FieldCount; idx++)
-                {
-                    TableColumnInfo inf = new TableColumnInfo();
-                    inf.Quoted = false;
-                    inf.NullAble = true;
-                    inf.ColumnName = reader.GetName(idx);
-                    Type type = reader.GetFieldType(idx);
-                    if (type == typeof(String))
-                    {
-                        inf.Quoted = true;
-                    }
-                    else if (type == typeof(DateTime))
-                    {
-                        inf.Quoted = false;
-                    }
-                    else
-                    {
-                        string s = type.ToString();
-                    }
-                    TableInformation.Add(inf);
-                }
-                *****/
                 while (reader.Read())
                 {
                     InsertRow row = new InsertRow(TableInformation);
@@ -427,21 +390,12 @@ namespace ExportSQL
                         else
                         {
                             string msg = string.Format("[Missing Type: {0}]", type.ToString());
-                            //System.Windows.Forms.MessageBox.Show(msg);
                             data = msg;
 
                             throw new Exception(msg);
                         }
                         row.AddColumn(data);
                     }
-                    /*
-                    foreach (TableColumnInfo col in TableInformation)
-                    {
-                        object obj = reader.GetValue(reader.GetOrdinal(col.ColumnName));
-                        string data = obj.ToString();
-                        row.AddColumn(data);
-                    }
-                    */
                     ScriptOut.AddRow(row);
                 }
                 conn.Close();
@@ -482,7 +436,6 @@ namespace ExportSQL
         public void RemoveColumn(int index)
         {
             cols.RemoveAt(index);
-            //colInfo.RemoveAt(index);
         }
 
         public void AddColumn(string col)
@@ -527,10 +480,6 @@ namespace ExportSQL
                 {
                     row.Append("NULL");
                 }
-                //else if (string.IsNullOrEmpty(col) && colInfo[cnt].NullAble)
-                //{
-                //    row.Append("NULL");
-                //}
                 else if (!colInfo[cnt].Quoted)
                 {
                     row.Append(col);
@@ -643,7 +592,6 @@ namespace ExportSQL
         {
             string col0 = this.tableInfo[0].ColumnName;
             tableInfo.RemoveAt(0);
-            //string Data0 = this.InsertRows[0];
             InsertRows[0].RemoveColumn(0);
             InsertRows[0].DataAtColumn(0);
         }
@@ -833,7 +781,6 @@ namespace ExportSQL
                 .Append(" (").Append(Columns).Append(") VALUES");
             int values = 0;
             TruncateTable = string.Format("TRUNCATE TABLE {0};", TableName);
-            //sql.Append("-- DELETE FROM ").Append(TableName).AppendLine(";");
             if (HasIdentity) sql.Append("SET IDENTITY_INSERT ").Append(TableName).AppendLine(" ON").AppendLine("GO");
             foreach (InsertRow row in InsertRows)
             {
